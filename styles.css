@@ -1,0 +1,14 @@
+body {
+    font-family: Arial, sans-serif;
+}
+.controls button {
+    margin: 10px;
+    padding: 10px;
+    font-size: 16px;
+}
+#audioClips {
+    margin-top: 20px;
+}
+.audio-clip {
+    margin-bottom: 10px;
+}
