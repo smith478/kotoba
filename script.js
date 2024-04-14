@@ -1,8 +1,8 @@
 let mediaRecorder;
 let audioChunks = [];
 let startTime;
-const audioDuration = 5000; // Duration of chunks in milliseconds (t * 1000)
-const overlapDuration = 2000; // Overlap duration in milliseconds (s * 1000)
+const audioDuration = 10000; // Duration of chunks in milliseconds (10 seconds)
+const overlapDuration = 3000; // Overlap duration in milliseconds (3 seconds)
 
 document.getElementById('startBtn').addEventListener('click', startRecording);
 document.getElementById('stopBtn').addEventListener('click', stopRecording);
@@ -22,10 +22,17 @@ function startRecording() {
                 let currentTime = Date.now();
                 let elapsedTime = currentTime - startTime;
 
-                if (elapsedTime >= audioDuration - overlapDuration) {
+                // Check if 10 seconds have passed
+                if (elapsedTime >= audioDuration) {
                     startTime += (audioDuration - overlapDuration);
                     saveAudio();
-                    audioChunks = [];
+                    
+                    // Retain the last 3 seconds of audio data for overlap
+                    let overlapChunks = audioChunks.slice(-Math.floor(overlapDuration / 1000));
+                    audioChunks = overlapChunks;
+
+                    // Display the audio
+                    displayAudio(audioChunks);
                 }
             };
 
@@ -40,26 +47,33 @@ function stopRecording() {
 
 function resetRecording() {
     document.getElementById('audioClips').innerHTML = '';
+    audioChunks = [];
+}
+
+function displayAudio(audioChunks) {
+    const audioBlob = new Blob(audioChunks, { 'type' : 'audio/ogg; codecs=opus' });
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audioElement = document.createElement('audio');
+    audioElement.src = audioUrl;
+    audioElement.controls = true;
+    document.getElementById('audioClips').appendChild(audioElement);
 }
 
 function saveAudio() {
     const audioBlob = new Blob(audioChunks, { 'type' : 'audio/ogg; codecs=opus' });
-    const audioUrl = URL.createObjectURL(audioBlob);
-    const clipContainer = document.createElement('article');
-    const audioElement = document.createElement('audio');
-    const deleteButton = document.createElement('button');
-
-    clipContainer.classList.add('audio-clip');
-    audioElement.src = audioUrl;
-    audioElement.controls = true;
-    deleteButton.textContent = 'Delete';
-    deleteButton.onclick = function() {
-        clipContainer.parentNode.removeChild(clipContainer);
-    };
-
-    clipContainer.appendChild(audioElement);
-    clipContainer.appendChild(deleteButton);
-    document.getElementById('audioClips').appendChild(clipContainer);
+    const formData = new FormData();
+    formData.append('audio', audioBlob, `audio${audioIndex}.wav`);
+    fetch('http://localhost:5000/save-audio', {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        audioIndex++;
+    }).catch(error => {
+        console.error('Error:', error);
+    });
 }
 
 function initializeMedia() {
