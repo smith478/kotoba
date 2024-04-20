@@ -17,7 +17,9 @@ class User(db.Model):
     def json(self):
         return {'id': self.id, 'name': self.name, 'email': self.email}
     
-db.create_all()
+def create_tables():
+    with app.app_context():
+        db.create_all()
 
 # Create a test route
 @app.route('/test', methods=['GET'])
@@ -25,7 +27,7 @@ def test():
     return jsonify({'message': 'The server is running!'})
 
 # Create a user
-@app.route('api/flask/users', methods=['POST'])
+@app.route('/api/flask/users', methods=['POST'])
 def create_user():
     try:
         data = request.get_json()
@@ -42,7 +44,7 @@ def create_user():
         return make_response(jsonify({'message': 'error creating user', 'error': str(e)}), 500)
     
 # Get all users
-@app.route('api/flask/users', methods=['GET'])
+@app.route('/api/flask/users', methods=['GET'])
 def get_users():
     try:
         users = User.query.all()
@@ -52,7 +54,7 @@ def get_users():
         return make_response(jsonify({'message': 'error getting users', 'error': str(e)}), 500)
     
 # Get users by id
-@app.route('api/flask/users/<id>', methods=['GET'])
+@app.route('/api/flask/users/<id>', methods=['GET'])
 def get_user(id):
     try:
         user = User.query.filter_by(id=id).first()
@@ -63,7 +65,7 @@ def get_user(id):
         return make_response(jsonify({'message': 'error getting user', 'error': str(e)}), 500)
     
 # Update a user by id
-@app.route('api/flask/users/<id>', methods=['PUT'])
+@app.route('/api/flask/users/<id>', methods=['PUT'])
 def update_user(id):
     try:
         user = User.query.filter_by(id=id).first()
@@ -78,7 +80,7 @@ def update_user(id):
         return make_response(jsonify({'message': 'error updating user', 'error': str(e)}), 500)
     
 # Delete a user by id
-@app.route('api/flask/users/<id>', methods=['DELETE'])
+@app.route('/api/flask/users/<id>', methods=['DELETE'])
 def delete_user(id):
     try:
         user = User.query.filter_by(id=id).first()
@@ -89,3 +91,8 @@ def delete_user(id):
         return make_response(jsonify({'message': 'user deleted'}), 200)
     except Exception as e:
         return make_response(jsonify({'message': 'error deleting user', 'error': str(e)}), 500)
+
+create_tables()
+
+if __name__ == '__main__':
+    app.run(port=4000)
